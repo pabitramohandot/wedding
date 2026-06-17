@@ -265,8 +265,8 @@ export default function Home() {
       <GoldDivider />
 
       {/* ── ENVELOPE LETTER ──────────────────────────── */}
-      <section className="bg-[#FAF7F2] relative overflow-hidden">
-        <FloatingPetals />
+      {/* NOTE: NO overflow-hidden here — it would break position:sticky inside EnvelopeSection */}
+      <section className="bg-[#FAF7F2] relative">
         <EnvelopeSection />
       </section>
 
