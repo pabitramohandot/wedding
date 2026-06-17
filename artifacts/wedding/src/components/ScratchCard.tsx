@@ -1,156 +1,202 @@
 import React, { useRef, useEffect, useState } from "react";
 
+const SPARKLE_COUNT = 16;
+
+function Sparkles() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {Array.from({ length: SPARKLE_COUNT }).map((_, i) => {
+        const angle = (i / SPARKLE_COUNT) * 360;
+        const dist = 30 + Math.random() * 40;
+        const x = 50 + Math.cos((angle * Math.PI) / 180) * dist;
+        const y = 50 + Math.sin((angle * Math.PI) / 180) * dist;
+        const size = 4 + Math.random() * 6;
+        return (
+          <div
+            key={i}
+            className="sparkle absolute rounded-full"
+            style={{
+              left: `${x}%`,
+              top: `${y}%`,
+              width: size,
+              height: size,
+              background: i % 3 === 0 ? "#C9A84C" : i % 3 === 1 ? "#F5C5A3" : "#E8C4B8",
+              animationDelay: `${i * 0.06}s`,
+              animationDuration: `${0.8 + Math.random() * 0.4}s`,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 export function ScratchCard() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const scratchingRef = useRef(false);
+  const lastPos       = useRef({ x: 0, y: 0 });
   const [isRevealed, setIsRevealed] = useState(false);
-  const [isScratching, setIsScratching] = useState(false);
+  const [scratchPct, setScratchPct] = useState(0);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
+    const canvas    = canvasRef.current;
     const container = containerRef.current;
-    
-    if (!canvas || !ctx || !container || isRevealed) return;
+    if (!canvas || !container || isRevealed) return;
 
-    // Set canvas dimensions to match container
+    const ctx  = canvas.getContext("2d")!;
     const rect = container.getBoundingClientRect();
-    canvas.width = rect.width;
+    canvas.width  = rect.width;
     canvas.height = rect.height;
 
-    // Draw the gold gradient scratch layer
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, "#C9A84C");
-    gradient.addColorStop(0.5, "#F5D78E");
-    gradient.addColorStop(1, "#B8860B");
-    
-    ctx.fillStyle = gradient;
+    // Gold gradient layer
+    const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    grad.addColorStop(0,   "#A87520");
+    grad.addColorStop(0.3, "#F5D78E");
+    grad.addColorStop(0.55,"#C9A84C");
+    grad.addColorStop(0.8, "#F0C060");
+    grad.addColorStop(1,   "#8B6010");
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Add text instruction
-    ctx.font = "16px Montserrat, sans-serif";
-    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    // Subtle grid texture
+    ctx.strokeStyle = "rgba(0,0,0,0.06)";
+    ctx.lineWidth   = 0.5;
+    for (let x = 0; x < canvas.width; x += 12) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 12) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // Instruction text
+    ctx.font      = "bold 13px Montserrat, sans-serif";
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("Scratch Here ✦", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("✦  Scratch to Reveal  ✦", canvas.width / 2, canvas.height / 2);
 
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.lineWidth = 40;
+    // Scratch mode
     ctx.globalCompositeOperation = "destination-out";
+    ctx.lineJoin = "round";
+    ctx.lineCap  = "round";
+    ctx.lineWidth = 44;
 
-    let lastX = 0;
-    let lastY = 0;
-
-    const getPosition = (e: MouseEvent | TouchEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = "touches" in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
-      const clientY = "touches" in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    };
-
-    const handleStart = (e: MouseEvent | TouchEvent) => {
-      setIsScratching(true);
-      const pos = getPosition(e);
-      lastX = pos.x;
-      lastY = pos.y;
-      scratch(pos.x, pos.y);
-    };
-
-    const handleMove = (e: MouseEvent | TouchEvent) => {
-      if (!isScratching) return;
-      e.preventDefault();
-      const pos = getPosition(e);
-      scratch(pos.x, pos.y, true);
-      lastX = pos.x;
-      lastY = pos.y;
-      checkReveal();
-    };
-
-    const handleEnd = () => {
-      setIsScratching(false);
-      checkReveal();
-    };
-
-    const scratch = (x: number, y: number, isMove = false) => {
-      ctx.beginPath();
-      if (isMove) {
-        ctx.moveTo(lastX, lastY);
-      } else {
-        ctx.moveTo(x, y);
-      }
-      ctx.lineTo(x, y);
-      ctx.stroke();
+    const getPos = (e: MouseEvent | TouchEvent) => {
+      const r = canvas.getBoundingClientRect();
+      const cx = "touches" in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+      const cy = "touches" in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+      return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) };
     };
 
     const checkReveal = () => {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const pixels = imageData.data;
-      let transparentPixels = 0;
-      
-      for (let i = 3; i < pixels.length; i += 4) {
-        if (pixels[i] === 0) {
-          transparentPixels++;
-        }
-      }
-
-      const totalPixels = pixels.length / 4;
-      const percentRevealed = (transparentPixels / totalPixels) * 100;
-
-      if (percentRevealed > 50) {
-        setIsRevealed(true);
-      }
+      const data  = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let cleared = 0;
+      for (let i = 3; i < data.length; i += 4) if (data[i] < 128) cleared++;
+      const pct = (cleared / (data.length / 4)) * 100;
+      setScratchPct(pct);
+      if (pct > 55) setIsRevealed(true);
     };
 
-    canvas.addEventListener("mousedown", handleStart);
-    canvas.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleEnd);
-    canvas.addEventListener("touchstart", handleStart, { passive: false });
-    canvas.addEventListener("touchmove", handleMove, { passive: false });
-    window.addEventListener("touchend", handleEnd);
+    const onStart = (e: MouseEvent | TouchEvent) => {
+      scratchingRef.current = true;
+      const p = getPos(e);
+      lastPos.current = p;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+    };
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      if (!scratchingRef.current) return;
+      e.preventDefault();
+      const p = getPos(e);
+      ctx.beginPath(); ctx.moveTo(lastPos.current.x, lastPos.current.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      lastPos.current = p;
+      checkReveal();
+    };
+    const onEnd = () => { scratchingRef.current = false; checkReveal(); };
+
+    canvas.addEventListener("mousedown", onStart);
+    canvas.addEventListener("mousemove", onMove);
+    canvas.addEventListener("touchstart", onStart, { passive: false });
+    canvas.addEventListener("touchmove",  onMove,  { passive: false });
+    window.addEventListener("mouseup", onEnd);
+    window.addEventListener("touchend", onEnd);
 
     return () => {
-      canvas.removeEventListener("mousedown", handleStart);
-      canvas.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleEnd);
-      canvas.removeEventListener("touchstart", handleStart);
-      canvas.removeEventListener("touchmove", handleMove);
-      window.removeEventListener("touchend", handleEnd);
+      canvas.removeEventListener("mousedown", onStart);
+      canvas.removeEventListener("mousemove", onMove);
+      canvas.removeEventListener("touchstart", onStart);
+      canvas.removeEventListener("touchmove",  onMove);
+      window.removeEventListener("mouseup", onEnd);
+      window.removeEventListener("touchend", onEnd);
     };
-  }, [isRevealed, isScratching]);
+  }, [isRevealed]);
 
   return (
-    <div className="flex flex-col items-center gap-6 py-12 px-4 w-full max-w-sm mx-auto">
-      <h2 className="text-sm font-sans tracking-[0.2em] text-muted-foreground uppercase text-center">
-        Scratch to discover the date
-      </h2>
-      
-      <div 
+    <div className="flex flex-col items-center gap-6 px-6 w-full max-w-sm mx-auto">
+      {/* Section label */}
+      <div className="text-center">
+        <p className="font-sans uppercase text-foreground/35" style={{ fontSize: "0.6rem", letterSpacing: "0.3em" }}>
+          A little secret for you
+        </p>
+        <h2
+          className="font-script text-primary mt-1"
+          style={{ fontSize: "clamp(2rem,8vw,2.8rem)" }}
+        >
+          Scratch to Discover
+        </h2>
+      </div>
+
+      {/* Card */}
+      <div
         ref={containerRef}
-        className="relative w-full aspect-[3/2] rounded-xl overflow-hidden shadow-lg border border-border bg-card flex items-center justify-center flex-col p-6 text-center"
+        className="relative w-full rounded-2xl overflow-hidden"
+        style={{
+          aspectRatio: "3/2",
+          background: "linear-gradient(135deg,#fdf8f0 0%,#fff8ec 100%)",
+          boxShadow: "0 8px 40px rgba(201,168,76,0.2), 0 2px 8px rgba(44,24,16,0.08)",
+          border: "1px solid rgba(201,168,76,0.25)",
+        }}
       >
-        <div className={`transition-opacity duration-1000 flex flex-col items-center justify-center gap-2 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="font-script text-4xl text-primary">5th & 6th July 2026</div>
-          <div className="font-serif italic text-xl text-foreground/80 mt-2">Rahul weds Taruna</div>
+        {/* Revealed content */}
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-6"
+          style={{ opacity: isRevealed ? 1 : scratchPct > 10 ? scratchPct / 100 : 0, transition: "opacity 0.8s ease" }}
+        >
+          <p className="font-sans uppercase text-primary/50" style={{ fontSize: "0.55rem", letterSpacing: "0.3em" }}>
+            Save the date
+          </p>
+          <h3 className="font-script text-primary text-gold-shimmer" style={{ fontSize: "clamp(2rem,8vw,2.6rem)" }}>
+            5th &amp; 6th July 2026
+          </h3>
+          <p className="font-serif italic text-foreground/60" style={{ fontSize: "clamp(1rem,4vw,1.3rem)" }}>
+            Rahul weds Taruna
+          </p>
+          <p className="font-sans text-foreground/35 uppercase" style={{ fontSize: "0.55rem", letterSpacing: "0.2em", marginTop: 2 }}>
+            Sterling Resort · Puri, Odisha
+          </p>
         </div>
-        
+
+        {/* Canvas */}
         <canvas
           ref={canvasRef}
-          className={`absolute inset-0 cursor-pointer touch-none transition-opacity duration-1000 ${isRevealed ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          className="absolute inset-0 touch-none cursor-pointer"
+          style={{
+            opacity: isRevealed ? 0 : 1,
+            pointerEvents: isRevealed ? "none" : "auto",
+            transition: "opacity 1s ease",
+          }}
         />
-        
-        {isRevealed && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-             {/* Simple CSS confetti could go here, but omitted for brevity as per instructions */}
-             <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary rounded-full animate-ping" />
-             <div className="absolute bottom-1/4 right-1/4 w-2 h-2 bg-secondary rounded-full animate-ping delay-150" />
-             <div className="absolute top-1/2 right-1/3 w-3 h-3 bg-accent rounded-full animate-ping delay-300" />
-          </div>
-        )}
+
+        {/* Sparkle burst on reveal */}
+        {isRevealed && <Sparkles />}
       </div>
+
+      {/* Progress hint */}
+      {!isRevealed && scratchPct > 2 && scratchPct < 55 && (
+        <p className="font-sans text-foreground/30 text-center" style={{ fontSize: "0.6rem", letterSpacing: "0.15em" }}>
+          Keep scratching…
+        </p>
+      )}
     </div>
   );
 }
