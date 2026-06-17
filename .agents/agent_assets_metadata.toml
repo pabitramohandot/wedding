@@ -1,0 +1,25 @@
+uploads = []
+
+[[generated]]
+id = "z0iG665cSzCaz8ZA0_tcl"
+uri = "file://attached_assets/generated_images/sterling_resort_puri_odisha_85a0.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "nyDX2MSCMlsT_YEaXX566"
+uri = "file://attached_assets/generated_images/watercolor_indian_wedding_floral_627e.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "j_3l0xZO48GsoEEq3RfKz"
+uri = "file://attached_assets/generated_images/romantic_indian_wedding_couple_83ec.png"
+type = "image"
+title = "generated_image"
+
+[[outputs]]
+id = "NSNIpQwmkamimFhPw7fuB"
+uri = "file://attached_assets/stock_images/stock_image.jpg"
+type = "image"
+title = "Elegant floral wedding invitation design with rose gold"
