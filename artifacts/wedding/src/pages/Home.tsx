@@ -43,6 +43,81 @@ function FadeIn({ children }: { children: React.ReactNode }) {
   );
 }
 
+function TimelineDay({ events }: { events: { name: string; time: string }[] }) {
+  return (
+    <div className="relative mx-auto" style={{ maxWidth: 360 }}>
+      {/* Center vertical line */}
+      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-primary/25 -translate-x-1/2" />
+
+      <div className="space-y-0">
+        {events.map((event, i) => {
+          const isLeft = i % 2 === 0;
+          return (
+            <TimelineItem key={i} event={event} isLeft={isLeft} index={i} />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TimelineItem({ event, isLeft, index }: { event: { name: string; time: string }; isLeft: boolean; index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('opacity-100', 'translate-x-0');
+            entry.target.classList.remove('opacity-0', isLeft ? '-translate-x-6' : 'translate-x-6');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isLeft]);
+
+  return (
+    <div className="relative flex items-center" style={{ minHeight: 80 }}>
+      {/* Left side */}
+      <div className="w-1/2 pr-5 flex justify-end">
+        {isLeft && (
+          <div
+            ref={ref}
+            className={`text-right transition-all duration-700 opacity-0 ${isLeft ? '-translate-x-6' : 'translate-x-6'}`}
+            style={{ transitionDelay: `${index * 80}ms` }}
+          >
+            <p className="font-serif font-semibold text-base text-foreground leading-tight">{event.name}</p>
+            <p className="font-sans text-[11px] text-primary/80 uppercase tracking-wider mt-0.5">{event.time}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Center dot */}
+      <div className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-primary bg-background z-10 shadow-sm" />
+
+      {/* Right side */}
+      <div className="w-1/2 pl-5 flex justify-start">
+        {!isLeft && (
+          <div
+            ref={ref}
+            className={`text-left transition-all duration-700 opacity-0 ${isLeft ? '-translate-x-6' : 'translate-x-6'}`}
+            style={{ transitionDelay: `${index * 80}ms` }}
+          >
+            <p className="font-serif font-semibold text-base text-foreground leading-tight">{event.name}</p>
+            <p className="font-sans text-[11px] text-primary/80 uppercase tracking-wider mt-0.5">{event.time}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <main className="w-full max-w-[430px] mx-auto bg-background text-foreground shadow-2xl min-h-[100dvh] overflow-x-hidden">
@@ -113,59 +188,48 @@ export default function Home() {
       </section>
 
       {/* Event Schedule */}
-      <section className="py-24 px-6 bg-background">
+      <section className="py-24 px-4 bg-background">
         <FadeIn>
-          <h2 className="text-sm font-sans tracking-[0.2em] text-primary uppercase text-center mb-12">
-            Event Schedule
-          </h2>
-          
-          <div className="space-y-12">
-            {/* Day 1 */}
-            <div className="bg-card border border-primary/20 rounded-xl p-8 shadow-sm">
-              <h3 className="font-script text-4xl text-primary text-center mb-6">
-                5th July 2026 <span className="font-sans text-sm font-medium tracking-widest uppercase block mt-2 text-foreground/60">Sunday</span>
-              </h3>
-              <ul className="space-y-6">
-                {[
-                  { name: "Haldi & Carnival", time: "10:15 AM onwards" },
-                  { name: "Pool Party", time: "12:15 PM onwards" },
-                  { name: "Tilak & Sangeet", time: "6:15 PM onwards" },
-                ].map((event, i) => (
-                  <li key={i} className="flex flex-col border-b border-primary/10 pb-4 last:border-0 last:pb-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <Flower2 className="w-4 h-4 text-primary/60" />
-                      <span className="font-serif font-bold text-xl text-foreground">{event.name}</span>
-                    </div>
-                    <span className="font-sans text-xs text-muted-foreground ml-7 uppercase tracking-wider">{event.time}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <h2 className="font-script text-5xl text-primary text-center mb-2">Schedule of Events</h2>
+          <p className="text-center font-sans text-xs tracking-[0.2em] text-foreground/40 uppercase mb-16">5th & 6th July 2026</p>
+        </FadeIn>
 
-            {/* Day 2 */}
-            <div className="bg-card border border-primary/20 rounded-xl p-8 shadow-sm">
-              <h3 className="font-script text-4xl text-primary text-center mb-6">
-                6th July 2026 <span className="font-sans text-sm font-medium tracking-widest uppercase block mt-2 text-foreground/60">Monday</span>
-              </h3>
-              <ul className="space-y-6">
-                {[
-                  { name: "Mayra", time: "10:15 AM onwards" },
-                  { name: "Korath & Baraat", time: "6:30 PM onwards" },
-                  { name: "Reception", time: "7:00 PM onwards" },
-                  { name: "Phere", time: "After Midnight" },
-                ].map((event, i) => (
-                  <li key={i} className="flex flex-col border-b border-primary/10 pb-4 last:border-0 last:pb-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <Flower2 className="w-4 h-4 text-primary/60" />
-                      <span className="font-serif font-bold text-xl text-foreground">{event.name}</span>
-                    </div>
-                    <span className="font-sans text-xs text-muted-foreground ml-7 uppercase tracking-wider">{event.time}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        {/* Day 1 */}
+        <FadeIn>
+          <div className="text-center mb-8">
+            <span className="inline-block font-sans text-xs tracking-[0.25em] uppercase text-primary/80 border border-primary/30 rounded-full px-5 py-1.5">
+              Sunday · 5th July 2026
+            </span>
           </div>
         </FadeIn>
+
+        <TimelineDay events={[
+          { name: "Haldi & Carnival", time: "10:15 AM" },
+          { name: "Pool Party", time: "12:15 PM" },
+          { name: "Tilak & Sangeet", time: "6:15 PM" },
+        ]} />
+
+        <div className="my-12 flex items-center justify-center gap-4">
+          <div className="h-px bg-primary/20 flex-1 max-w-[80px]" />
+          <Flower2 className="w-5 h-5 text-primary/40" />
+          <div className="h-px bg-primary/20 flex-1 max-w-[80px]" />
+        </div>
+
+        {/* Day 2 */}
+        <FadeIn>
+          <div className="text-center mb-8">
+            <span className="inline-block font-sans text-xs tracking-[0.25em] uppercase text-primary/80 border border-primary/30 rounded-full px-5 py-1.5">
+              Monday · 6th July 2026
+            </span>
+          </div>
+        </FadeIn>
+
+        <TimelineDay events={[
+          { name: "Mayra", time: "10:15 AM" },
+          { name: "Korath & Baraat", time: "6:30 PM" },
+          { name: "Reception", time: "7:00 PM" },
+          { name: "Phere", time: "After Midnight" },
+        ]} />
       </section>
 
       <Divider />
