@@ -177,7 +177,7 @@ function TimelineItem({ event, isLeft, index }: {
 /* ── Main Page ──────────────────────────────────────── */
 export default function Home() {
   return (
-    <main className="w-full max-w-[430px] mx-auto bg-background text-foreground overflow-x-hidden" style={{ boxShadow: "0 0 80px rgba(201,168,76,0.08)" }}>
+    <main className="w-full max-w-[430px] mx-auto bg-background text-foreground" style={{ boxShadow: "0 0 80px rgba(201,168,76,0.08)", overflowX: "clip" }}>
 
       {/* ── HERO ─────────────────────────────────────── */}
       <section className="relative w-full h-[100dvh] flex flex-col items-center justify-center overflow-hidden bg-black">
