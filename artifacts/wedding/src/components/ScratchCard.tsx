@@ -46,56 +46,80 @@ export function ScratchCard() {
 
     const ctx  = canvas.getContext("2d")!;
     const rect = container.getBoundingClientRect();
-    canvas.width  = rect.width;
-    canvas.height = rect.height;
+    const dpr  = window.devicePixelRatio || 1;
+    const width = rect.width;
+    const height = rect.height;
+
+    // Set canvas dimensions scaled by devicePixelRatio for sharp rendering on retina screens
+    canvas.width  = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width  = `${width}px`;
+    canvas.style.height = `${height}px`;
+
+    // Scale drawing context to match screen coordinates
+    ctx.scale(dpr, dpr);
 
     // Gold gradient layer
-    const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    const grad = ctx.createLinearGradient(0, 0, width, height);
     grad.addColorStop(0,   "#A87520");
     grad.addColorStop(0.3, "#F5D78E");
     grad.addColorStop(0.55,"#C9A84C");
     grad.addColorStop(0.8, "#F0C060");
     grad.addColorStop(1,   "#8B6010");
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, width, height);
 
     // Subtle grid texture
     ctx.strokeStyle = "rgba(0,0,0,0.06)";
     ctx.lineWidth   = 0.5;
-    for (let x = 0; x < canvas.width; x += 12) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    for (let x = 0; x < width; x += 12) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
     }
-    for (let y = 0; y < canvas.height; y += 12) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    for (let y = 0; y < height; y += 12) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
     }
 
     // Instruction text
-    ctx.font      = "bold 13px Montserrat, sans-serif";
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.font      = "bold 14px Montserrat, sans-serif";
+    ctx.fillStyle = "rgba(85,0,0,0.85)"; // Rich, high-visibility Maroon
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("✦  Scratch to Reveal  ✦", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("✦  Scratch to Reveal  ✦", width / 2, height / 2);
 
     // Scratch mode
     ctx.globalCompositeOperation = "destination-out";
     ctx.lineJoin = "round";
     ctx.lineCap  = "round";
-    ctx.lineWidth = 44;
+    ctx.lineWidth = 50; // Solid, strong scratching stroke width
+    ctx.strokeStyle = "black";
 
     const getPos = (e: MouseEvent | TouchEvent) => {
       const r = canvas.getBoundingClientRect();
       const cx = "touches" in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
       const cy = "touches" in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
-      return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) };
+      return { x: cx - r.left, y: cy - r.top };
     };
 
+    // Fast, sampled pixel opacity checking to guarantee 60fps dragging on mobile
     const checkReveal = () => {
-      const data  = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const imgWidth  = canvas.width;
+      const imgHeight = canvas.height;
+      const data = ctx.getImageData(0, 0, imgWidth, imgHeight).data;
       let cleared = 0;
-      for (let i = 3; i < data.length; i += 4) if (data[i] < 128) cleared++;
-      const pct = (cleared / (data.length / 4)) * 100;
+      let total = 0;
+
+      // Sample every 4th pixel to avoid costly CPU iterations on high-DPI screens
+      for (let y = 0; y < imgHeight; y += 4) {
+        for (let x = 0; x < imgWidth; x += 4) {
+          const idx = (y * imgWidth + x) * 4;
+          total++;
+          if (data[idx + 3] < 128) cleared++;
+        }
+      }
+
+      const pct = (cleared / total) * 100;
       setScratchPct(pct);
-      if (pct > 55) setIsRevealed(true);
+      if (pct >= 45) setIsRevealed(true);
     };
 
     const onStart = (e: MouseEvent | TouchEvent) => {
@@ -135,7 +159,7 @@ export function ScratchCard() {
     <div className="flex flex-col items-center gap-6 px-6 w-full max-w-sm mx-auto">
       {/* Section label */}
       <div className="text-center">
-        <p className="font-sans uppercase text-foreground/35" style={{ fontSize: "0.6rem", letterSpacing: "0.3em" }}>
+        <p className="font-sans uppercase text-foreground/75" style={{ fontSize: "12px", letterSpacing: "0.25em" }}>
           A little secret for you
         </p>
         <h2
@@ -160,18 +184,18 @@ export function ScratchCard() {
         {/* Revealed content */}
         <div
           className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-6"
-          style={{ opacity: isRevealed ? 1 : scratchPct > 10 ? scratchPct / 100 : 0, transition: "opacity 0.8s ease" }}
+          style={{ opacity: 1 }}
         >
-          <p className="font-sans uppercase text-primary/50" style={{ fontSize: "0.55rem", letterSpacing: "0.3em" }}>
+          <p className="font-sans uppercase text-primary/85" style={{ fontSize: "12px", letterSpacing: "0.2em" }}>
             Save the date
           </p>
           <h3 className="font-script text-primary text-gold-shimmer" style={{ fontSize: "clamp(2rem,8vw,2.6rem)" }}>
             5th &amp; 6th July 2026
           </h3>
-          <p className="font-serif italic text-foreground/60" style={{ fontSize: "clamp(1rem,4vw,1.3rem)" }}>
+          <p className="font-serif italic text-foreground/85" style={{ fontSize: "clamp(1rem,4vw,1.3rem)" }}>
             Rahul weds Taruna
           </p>
-          <p className="font-sans text-foreground/35 uppercase" style={{ fontSize: "0.55rem", letterSpacing: "0.2em", marginTop: 2 }}>
+          <p className="font-sans text-foreground/75 uppercase" style={{ fontSize: "12px", letterSpacing: "0.15em", marginTop: 2 }}>
             Sterling Resort · Puri, Odisha
           </p>
         </div>
@@ -183,7 +207,7 @@ export function ScratchCard() {
           style={{
             opacity: isRevealed ? 0 : 1,
             pointerEvents: isRevealed ? "none" : "auto",
-            transition: "opacity 1s ease",
+            display: isRevealed ? "none" : "block",
           }}
         />
 
@@ -192,11 +216,12 @@ export function ScratchCard() {
       </div>
 
       {/* Progress hint */}
-      {!isRevealed && scratchPct > 2 && scratchPct < 55 && (
-        <p className="font-sans text-foreground/30 text-center" style={{ fontSize: "0.6rem", letterSpacing: "0.15em" }}>
+      {!isRevealed && scratchPct > 2 && scratchPct < 45 && (
+        <p className="font-sans text-foreground/75 text-center" style={{ fontSize: "12px", letterSpacing: "0.15em" }}>
           Keep scratching…
         </p>
       )}
+
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react";
-import floralImg from "@assets/generated_images/watercolor_indian_wedding_floral_627e.png";
 
 /**
  * Scroll-driven envelope.
@@ -19,6 +18,8 @@ export function EnvelopeSection() {
   const g1Ref       = useRef<HTMLDivElement>(null);
   const g2Ref       = useRef<HTMLDivElement>(null);
   const g3Ref       = useRef<HTMLDivElement>(null);
+  const envelopeRef = useRef<HTMLDivElement>(null);
+  const insideFoldsRef = useRef<HTMLDivElement>(null);
   const rafId       = useRef(0);
 
   useEffect(() => {
@@ -33,6 +34,12 @@ export function EnvelopeSection() {
 
         // Flap angle: 0→180° during p 0→0.25
         const flapAngle   = Math.min(180, (p / 0.25) * 180);
+        
+        // Scale top border-radius of the envelope body from 16px (closed) to 0px (open)
+        // as the flap rotates from 0 to 90 degrees.
+        const radiusPercent = Math.max(0, 1 - (flapAngle / 90));
+        const topRadius     = radiusPercent * 16;
+        
         // Letter rise: 0→1 during p 0.15→0.75
         const letterRise  = Math.max(0, Math.min(1, (p - 0.15) / 0.60));
         const letterY     = -letterRise * 115;
@@ -75,6 +82,14 @@ export function EnvelopeSection() {
           g3Ref.current.style.opacity   = String(g3);
           g3Ref.current.style.transform = `translateY(${(1 - g3) * 10}px)`;
         }
+        if (envelopeRef.current) {
+          envelopeRef.current.style.borderTopLeftRadius  = `${topRadius}px`;
+          envelopeRef.current.style.borderTopRightRadius = `${topRadius}px`;
+        }
+        if (insideFoldsRef.current) {
+          insideFoldsRef.current.style.borderTopLeftRadius  = `${topRadius}px`;
+          insideFoldsRef.current.style.borderTopRightRadius = `${topRadius}px`;
+        }
       }
       rafId.current = requestAnimationFrame(tick);
     };
@@ -111,13 +126,13 @@ export function EnvelopeSection() {
           position: "absolute", top: 40, left: 0, right: 0,
           textAlign: "center", opacity: 1, pointerEvents: "none",
         }}>
-          <p className="font-sans uppercase text-foreground/30"
-            style={{ fontSize: "0.6rem", letterSpacing: "0.3em" }}>
-            A personal note
+          <p className="font-sans uppercase text-primary/85"
+            style={{ fontSize: "12px", letterSpacing: "0.3em", fontWeight: 600 }}>
+            A Warm Welcome from
           </p>
           <h2 className="font-script text-primary mt-1"
             style={{ fontSize: "clamp(2.2rem,8vw,3rem)" }}>
-            You're Invited
+            Varma Family
           </h2>
         </div>
 
@@ -128,87 +143,100 @@ export function EnvelopeSection() {
           <div ref={letterRef} style={{
             position: "absolute",
             left: 8, right: 8,
-            bottom: "14%", top: "10%",
+            bottom: "4%", top: "4%",
             zIndex: 20,
             opacity: 0.01,
             transform: "translateY(0%)",
             background: "linear-gradient(168deg,#FFFEF9 0%,#FAF5E8 100%)",
-            border: "1px solid rgba(201,168,76,0.28)",
-            borderRadius: 3,
+            border: "1.5px solid rgba(201,168,76,0.32)",
+            borderRadius: 6,
             boxShadow: "none",
-            padding: "18px 16px 16px",
+            padding: "14px 14px 10px",
             overflow: "hidden",
           }}>
             {/* Inset gold border */}
             <div style={{
-              position: "absolute", inset: 10,
-              border: "1px solid rgba(201,168,76,0.13)",
-              borderRadius: 2, pointerEvents: "none",
+              position: "absolute", inset: 6,
+              border: "1.2px solid rgba(201,168,76,0.20)",
+              borderRadius: 4, pointerEvents: "none",
             }}/>
 
-            {/* Corner florals */}
-            <img src={floralImg} alt="" style={{
-              position:"absolute", top:4, left:4, width:34, height:34,
-              objectFit:"contain", opacity:0.55, transform:"rotate(-12deg)",
-            }}/>
-            <img src={floralImg} alt="" style={{
-              position:"absolute", top:4, right:4, width:34, height:34,
-              objectFit:"contain", opacity:0.55, transform:"rotate(12deg) scaleX(-1)",
-            }}/>
+
 
             {/* Block 1 — Greeting */}
-            <div ref={g1Ref} style={{ opacity:0, transform:"translateY(8px)", textAlign:"center", paddingTop:14 }}>
+            <div ref={g1Ref} style={{ opacity:0, transform:"translateY(8px)", textAlign:"center", paddingTop:8 }}>
               <h3 className="font-script text-primary"
-                style={{ fontSize:"clamp(1.4rem,5vw,1.9rem)" }}>
+                style={{ fontSize:"clamp(1.45rem,5.2vw,1.95rem)" }}>
                 Dear Friends &amp; Family,
               </h3>
-              <div style={{ height:1, width:52, background:"rgba(201,168,76,0.22)", margin:"6px auto 0" }}/>
+              <div style={{ height:1, width:52, background:"rgba(201,168,76,0.25)", margin:"4px auto 0" }}/>
             </div>
 
             {/* Block 2 — Body */}
-            <div ref={g2Ref} style={{ opacity:0, transform:"translateY(8px)", textAlign:"center", marginTop:12 }}>
-              <p className="font-serif text-foreground/72 leading-relaxed"
-                style={{ fontSize:"clamp(0.72rem,2.7vw,0.85rem)" }}>
+            <div ref={g2Ref} style={{ opacity:0, transform:"translateY(8px)", textAlign:"center", marginTop:8 }}>
+              <p className="font-serif text-foreground/90 leading-relaxed font-medium"
+                style={{ fontSize:"clamp(0.85rem,2.9vw,0.95rem)" }}>
                 With immense joy and gratitude, we solicit your gracious presence and blessings as
                 we celebrate this beautiful occasion with our families and loved ones.
               </p>
-              <p className="font-serif text-foreground/72 leading-relaxed"
-                style={{ fontSize:"clamp(0.72rem,2.7vw,0.85rem)", marginTop:8 }}>
+              <p className="font-serif text-foreground/90 leading-relaxed font-medium"
+                style={{ fontSize:"clamp(0.85rem,2.9vw,0.95rem)", marginTop:6 }}>
                 Your love, laughter and blessings will make these moments even more special,
                 and we look forward to creating memories together.
               </p>
             </div>
 
             {/* Block 3 — Signature */}
-            <div ref={g3Ref} style={{ opacity:0, transform:"translateY(10px)", textAlign:"center", marginTop:10 }}>
-              <span className="font-serif italic text-foreground/36"
-                style={{ fontSize:"0.75rem" }}>
+            <div ref={g3Ref} style={{ opacity:0, transform:"translateY(10px)", textAlign:"center", marginTop:6 }}>
+              <span className="font-serif italic text-foreground/75 font-semibold"
+                style={{ fontSize:"13px" }}>
                 With all our love,
               </span>
               <h4 className="font-script text-primary"
-                style={{ fontSize:"clamp(1.4rem,5vw,1.9rem)", marginTop:2 }}>
+                style={{ fontSize:"clamp(1.45rem,5.2vw,1.95rem)", marginTop:1 }}>
                 Rahul &amp; Taruna
               </h4>
             </div>
           </div>
 
           {/* ── ENVELOPE ─────────────────────────────────── */}
-          <div style={{
-            position: "relative",
-            width: "100%",
-            aspectRatio: "4/3.2",
-            borderRadius: 4,
-            background: "linear-gradient(170deg,#EDE5D0 0%,#DDD0B0 100%)",
-            border: "1px solid rgba(201,168,76,0.35)",
-            boxShadow: "0 16px 56px rgba(44,24,16,0.22), 0 4px 12px rgba(44,24,16,0.10)",
-            overflow: "visible",
-          }}>
+          <div
+            ref={envelopeRef}
+            style={{
+              position: "relative",
+              width: "100%",
+              aspectRatio: "4/3.5",
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
+              borderTopLeftRadius: 16,
+              borderTopRightRadius: 16,
+              background: "linear-gradient(170deg,#330000 0%,#220000 100%)",
+              border: "1px solid rgba(201,168,76,0.35)",
+              boxShadow: "0 16px 56px rgba(44,24,16,0.22), 0 4px 12px rgba(44,24,16,0.10)",
+              overflow: "visible",
+            }}
+          >
             {/* Inside V-folds */}
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none"
-              style={{ position:"absolute",inset:0,width:"100%",height:"100%",zIndex:1,pointerEvents:"none" }}>
-              <path d="M0,100 L50,58 L100,100 Z" fill="#D5C8A0"/>
-              <path d="M0,0 L50,58 L100,0 Z"    fill="#E5D9B8"/>
-            </svg>
+            <div
+              ref={insideFoldsRef}
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderBottomLeftRadius: 16,
+                borderBottomRightRadius: 16,
+                borderTopLeftRadius: 16,
+                borderTopRightRadius: 16,
+                overflow: "hidden",
+                zIndex: 1,
+                pointerEvents: "none",
+              }}
+            >
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none"
+                style={{ width:"100%",height:"100%",display:"block" }}>
+                <path d="M0,100 L50,58 L100,100 Z" fill="#3D0000"/>
+                <path d="M0,0 L50,58 L100,0 Z"    fill="#330000"/>
+              </svg>
+            </div>
 
             {/* Flap — rotates open on scroll */}
             <div ref={flapRef} style={{
@@ -220,18 +248,27 @@ export function EnvelopeSection() {
               zIndex: 30,
             }}>
               {/* Front face */}
-              <div style={{ position:"absolute",inset:0,backfaceVisibility:"hidden" }}>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  backfaceVisibility: "hidden",
+                  borderTopLeftRadius: 16,
+                  borderTopRightRadius: 16,
+                  overflow: "hidden",
+                }}
+              >
                 <svg viewBox="0 0 100 50" preserveAspectRatio="none"
                   style={{ width:"100%",height:"100%",display:"block" }}>
                   <defs>
                     <linearGradient id="flapGrad" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%"   stopColor="#C8A455"/>
-                      <stop offset="100%" stopColor="#A68030"/>
+                      <stop offset="0%"   stopColor="#550000"/>
+                      <stop offset="100%" stopColor="#3C0000"/>
                     </linearGradient>
                   </defs>
                   <path d="M0,0 L50,48 L100,0 Z" fill="url(#flapGrad)"/>
-                  <path d="M0,0 L50,48 L100,0 Z" fill="none"
-                    stroke="rgba(201,168,76,0.3)" strokeWidth="0.4"/>
+                  <path d="M2,0 L50,45.5 L98,0" fill="none"
+                    stroke="#D4B76C" strokeWidth="0.65" strokeLinecap="round"/>
                 </svg>
                 {/* Wax seal */}
                 <div style={{
@@ -244,16 +281,29 @@ export function EnvelopeSection() {
                   zIndex:5,
                 }}>
                   <span style={{
-                    color:"rgba(255,220,180,0.95)", fontSize:14,
+                    color:"rgba(255,220,180,0.95)", fontSize:12.5,
                     fontFamily:"'Great Vibes',cursive",
-                  }}>R</span>
+                    letterSpacing: "-0.02em",
+                  }}>TR</span>
                 </div>
               </div>
               {/* Back face */}
-              <div style={{ position:"absolute",inset:0,backfaceVisibility:"hidden",transform:"rotateX(180deg)" }}>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  backfaceVisibility: "hidden",
+                  transform: "rotateX(180deg)",
+                  borderBottomLeftRadius: 16,
+                  borderBottomRightRadius: 16,
+                  overflow: "hidden",
+                }}
+              >
                 <svg viewBox="0 0 100 50" preserveAspectRatio="none"
                   style={{ width:"100%",height:"100%",display:"block" }}>
-                  <path d="M0,0 L50,48 L100,0 Z" fill="#D8CBA5"/>
+                  <path d="M0,50 L50,0 L100,50 Z" fill="#440000"/>
+                  <path d="M2,50 L50,3 L98,50" fill="none"
+                    stroke="#D4B76C" strokeWidth="0.5" />
                 </svg>
               </div>
             </div>
@@ -261,11 +311,15 @@ export function EnvelopeSection() {
             {/* Front panel (covers bottom of letter while inside envelope) */}
             <div style={{
               position:"absolute", inset:0, zIndex:31,
-              pointerEvents:"none", overflow:"hidden", borderRadius:4,
+              pointerEvents:"none", overflow:"hidden",
+              borderBottomLeftRadius: 16,
+              borderBottomRightRadius: 16,
             }}>
               <svg viewBox="0 0 100 120" preserveAspectRatio="none"
                 style={{ width:"100%",height:"100%",display:"block" }}>
-                <path d="M0,48 L50,90 L100,48 L100,120 L0,120 Z" fill="#E8DCB8"/>
+                <path d="M0,48 L50,90 L100,48 L100,120 L0,120 Z" fill="#4A0000"/>
+                <path d="M0,48 L50,90 L100,48" fill="none"
+                  stroke="#D4B76C" strokeWidth="0.5" />
               </svg>
             </div>
           </div>
@@ -277,8 +331,8 @@ export function EnvelopeSection() {
           display:"flex", flexDirection:"column", alignItems:"center", gap:6,
           opacity:1, pointerEvents:"none",
         }}>
-          <p className="font-sans uppercase text-foreground/30"
-            style={{ fontSize:"0.55rem", letterSpacing:"0.28em" }}>
+          <p className="font-sans uppercase text-primary/85"
+            style={{ fontSize:"12px", letterSpacing:"0.28em", fontWeight: 600 }}>
             Scroll to open
           </p>
           <svg width="16" height="22" viewBox="0 0 16 22" fill="none">
