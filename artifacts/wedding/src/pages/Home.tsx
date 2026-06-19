@@ -178,6 +178,7 @@ function TimelineItem({ event, isLeft, index }: {
 /* ── Main Page ──────────────────────────────────────── */
 export default function Home() {
   const [showPreloader, setShowPreloader] = useState(true);
+  const [isPaused, setIsPaused] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -199,6 +200,32 @@ export default function Home() {
         video.currentTime = 0;
       }
     }
+  }, [showPreloader]);
+
+  useEffect(() => {
+    const handleUnlock = () => {
+      const video = videoRef.current;
+      if (video && video.paused && !showPreloader) {
+        video.muted = true;
+        video.defaultMuted = true;
+        video.play()
+          .then(() => {
+            cleanup();
+          })
+          .catch(err => {
+            console.log("Global interaction play attempt failed:", err);
+          });
+      }
+    };
+    const cleanup = () => {
+      window.removeEventListener("click", handleUnlock);
+      window.removeEventListener("touchstart", handleUnlock);
+    };
+    if (!showPreloader) {
+      window.addEventListener("click", handleUnlock, { passive: true });
+      window.addEventListener("touchstart", handleUnlock, { passive: true });
+    }
+    return cleanup;
   }, [showPreloader]);
 
   return (
@@ -229,8 +256,33 @@ export default function Home() {
           muted
           loop
           playsInline
+          onPlay={() => setIsPaused(false)}
+          onPause={() => setIsPaused(true)}
           className="absolute inset-0 w-full h-full object-cover opacity-100"
         />
+
+        {isPaused && (
+          <button
+            onClick={() => {
+              const video = videoRef.current;
+              if (video) {
+                video.muted = true;
+                video.defaultMuted = true;
+                video.play().catch(err => console.log("Manual play failed:", err));
+              }
+            }}
+            className="absolute z-20 w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-[#F5D480]/40 flex items-center justify-center text-[#F5D480] shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 animate-pulse"
+            style={{
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            <svg className="w-6 h-6 fill-current translate-x-[2px]" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+        )}
 
         {/* Scroll indicator */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
