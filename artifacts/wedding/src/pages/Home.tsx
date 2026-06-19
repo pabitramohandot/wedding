@@ -248,7 +248,12 @@ export default function Home() {
       <main className="w-full max-w-[430px] mx-auto bg-background text-foreground" style={{ boxShadow: "0 0 80px rgba(201,168,76,0.08)", overflowX: "clip" }}>
 
       {/* ── HERO ─────────────────────────────────────── */}
-      <section className="relative w-full h-[100dvh] flex flex-col items-center justify-center overflow-hidden bg-black">
+      <section 
+        className="relative w-full h-[100dvh] flex flex-col items-center justify-center overflow-hidden"
+        style={{ background: "linear-gradient(to bottom, #4A0000 0%, #2A0000 50%, #150000 100%)" }}
+      >
+        <FloatingPetals dark />
+
         <video
           ref={videoRef}
           src={videoSrc}
@@ -258,11 +263,11 @@ export default function Home() {
           playsInline
           onPlay={() => setIsPaused(false)}
           onPause={() => setIsPaused(true)}
-          className="absolute inset-0 w-full h-full object-cover opacity-100"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${isPaused ? "opacity-0 pointer-events-none" : "opacity-100"}`}
         />
 
         {isPaused && (
-          <button
+          <div
             onClick={() => {
               const video = videoRef.current;
               if (video) {
@@ -271,17 +276,27 @@ export default function Home() {
                 video.play().catch(err => console.log("Manual play failed:", err));
               }
             }}
-            className="absolute z-20 w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-[#F5D480]/40 flex items-center justify-center text-[#F5D480] shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 animate-pulse"
+            className="absolute z-20 w-[min(280px,80vw)] aspect-square rounded-full bg-black/60 backdrop-blur-md border border-[#F5D480]/30 flex flex-col items-center justify-center text-center p-6 cursor-pointer transition-all duration-500 hover:scale-105 active:scale-95 shadow-2xl"
             style={{
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
             }}
           >
-            <svg className="w-6 h-6 fill-current translate-x-[2px]" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </button>
+            <div className="w-[90%] h-[90%] rounded-full border border-[#F5D480]/20 flex flex-col items-center justify-center p-4">
+              <span className="font-script text-[4rem] text-[#F5D480] leading-none mb-2">R & T</span>
+              <div className="h-[1px] w-16 bg-[#F5D480]/30 my-1" />
+              <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#F5D480]/90 font-medium mt-1">
+                Rahul & Taruna
+              </p>
+              <div className="flex items-center gap-1.5 mt-4 text-[#F5D480]/80">
+                <svg className="w-4 h-4 fill-current animate-pulse" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <span className="font-sans text-[9px] uppercase tracking-[0.15em] font-semibold">Play Video Invitation</span>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Scroll indicator */}
