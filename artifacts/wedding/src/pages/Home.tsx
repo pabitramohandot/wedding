@@ -4,7 +4,7 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { EnvelopeSection } from "@/components/EnvelopeSection";
 import { PreloaderEnvelope } from "@/components/PreloaderEnvelope";
 import { WardrobeSlider } from "@/components/WardrobeSlider";
-import videoSrc from "@assets/generated_videos/IMG_4018.mp4";
+import heroGif from "@assets/generated_videos/IMG_4018.gif";
 import venueImg from "@assets/generated_images/sterling_resort_puri_odisha_85a0.png";
 
 /* ── Floating Petals Background ─────────────────────── */
@@ -178,70 +178,11 @@ function TimelineItem({ event, isLeft, index }: {
 /* ── Main Page ──────────────────────────────────────── */
 export default function Home() {
   const [showPreloader, setShowPreloader] = useState(true);
-  const [isPaused, setIsPaused] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      video.muted = true;
-      video.defaultMuted = true;
-      video.playbackRate = 0.7; // Play at 70% speed (slower)
-      if (!showPreloader) {
-        video.currentTime = 0;    // Reset to starting frame
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error("Playback failed:", error);
-          });
-        }
-      } else {
-        video.pause();
-        video.currentTime = 0;
-      }
-    }
-  }, [showPreloader]);
-
-  useEffect(() => {
-    const handleUnlock = () => {
-      const video = videoRef.current;
-      if (video && video.paused && !showPreloader) {
-        video.muted = true;
-        video.defaultMuted = true;
-        video.play()
-          .then(() => {
-            cleanup();
-          })
-          .catch(err => {
-            console.log("Global interaction play attempt failed:", err);
-          });
-      }
-    };
-    const cleanup = () => {
-      window.removeEventListener("click", handleUnlock);
-      window.removeEventListener("touchstart", handleUnlock);
-    };
-    if (!showPreloader) {
-      window.addEventListener("click", handleUnlock, { passive: true });
-      window.addEventListener("touchstart", handleUnlock, { passive: true });
-    }
-    return cleanup;
-  }, [showPreloader]);
 
   return (
     <>
       {showPreloader && (
         <PreloaderEnvelope
-          onStart={() => {
-            const video = videoRef.current;
-            if (video) {
-              video.muted = true;
-              video.defaultMuted = true;
-              video.play().catch(error => {
-                console.error("Synchronous user gesture playback failed:", error);
-              });
-            }
-          }}
           onComplete={() => setShowPreloader(false)}
         />
       )}
@@ -254,50 +195,11 @@ export default function Home() {
       >
         <FloatingPetals dark />
 
-        <video
-          ref={videoRef}
-          src={videoSrc}
-          autoPlay
-          muted
-          loop
-          playsInline
-          onPlay={() => setIsPaused(false)}
-          onPause={() => setIsPaused(true)}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${isPaused ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+        <img
+          src={heroGif}
+          alt="Wedding Celebration"
+          className="absolute inset-0 w-full h-full object-cover opacity-100"
         />
-
-        {isPaused && (
-          <div
-            onClick={() => {
-              const video = videoRef.current;
-              if (video) {
-                video.muted = true;
-                video.defaultMuted = true;
-                video.play().catch(err => console.log("Manual play failed:", err));
-              }
-            }}
-            className="absolute z-20 w-[min(280px,80vw)] aspect-square rounded-full bg-black/60 backdrop-blur-md border border-[#F5D480]/30 flex flex-col items-center justify-center text-center p-6 cursor-pointer transition-all duration-500 hover:scale-105 active:scale-95 shadow-2xl"
-            style={{
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-            }}
-          >
-            <div className="w-[90%] h-[90%] rounded-full border border-[#F5D480]/20 flex flex-col items-center justify-center p-4">
-              <span className="font-script text-[4rem] text-[#F5D480] leading-none mb-2">R & T</span>
-              <div className="h-[1px] w-16 bg-[#F5D480]/30 my-1" />
-              <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#F5D480]/90 font-medium mt-1">
-                Rahul & Taruna
-              </p>
-              <div className="flex items-center gap-1.5 mt-4 text-[#F5D480]/80">
-                <svg className="w-4 h-4 fill-current animate-pulse" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-                <span className="font-sans text-[9px] uppercase tracking-[0.15em] font-semibold">Play Video Invitation</span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Scroll indicator */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
