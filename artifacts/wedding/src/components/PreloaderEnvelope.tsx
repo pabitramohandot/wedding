@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 interface PreloaderEnvelopeProps {
+  onStart?: () => void;
   onComplete: () => void;
 }
 
@@ -13,7 +14,7 @@ const PETALS = [
   { left: "90%", delay: "1.2s", dur: "9.5s", color: "#E8C4B8" },
 ];
 
-export function PreloaderEnvelope({ onComplete }: PreloaderEnvelopeProps) {
+export function PreloaderEnvelope({ onStart, onComplete }: PreloaderEnvelopeProps) {
   const [isOpening, setIsOpening] = useState(false);
   const [isDone, setIsDone] = useState(false);
 
@@ -28,6 +29,7 @@ export function PreloaderEnvelope({ onComplete }: PreloaderEnvelopeProps) {
   const handleOpen = () => {
     if (isOpening) return;
     setIsOpening(true);
+    if (onStart) onStart();
     
     // Step 1: Wax seal pops, flap opens (takes 800ms)
     // Step 2: Full screen slides up / fades out

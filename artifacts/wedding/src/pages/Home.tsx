@@ -183,6 +183,8 @@ export default function Home() {
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
+      video.muted = true;
+      video.defaultMuted = true;
       video.playbackRate = 0.7; // Play at 70% speed (slower)
       if (!showPreloader) {
         video.currentTime = 0;    // Reset to starting frame
@@ -201,7 +203,21 @@ export default function Home() {
 
   return (
     <>
-      {showPreloader && <PreloaderEnvelope onComplete={() => setShowPreloader(false)} />}
+      {showPreloader && (
+        <PreloaderEnvelope
+          onStart={() => {
+            const video = videoRef.current;
+            if (video) {
+              video.muted = true;
+              video.defaultMuted = true;
+              video.play().catch(error => {
+                console.error("Synchronous user gesture playback failed:", error);
+              });
+            }
+          }}
+          onComplete={() => setShowPreloader(false)}
+        />
+      )}
       <main className="w-full max-w-[430px] mx-auto bg-background text-foreground" style={{ boxShadow: "0 0 80px rgba(201,168,76,0.08)", overflowX: "clip" }}>
 
       {/* ── HERO ─────────────────────────────────────── */}
@@ -209,7 +225,10 @@ export default function Home() {
         <video
           ref={videoRef}
           src={videoSrc}
-          muted loop playsInline
+          autoPlay
+          muted
+          loop
+          playsInline
           className="absolute inset-0 w-full h-full object-cover opacity-100"
         />
 
